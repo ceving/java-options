@@ -120,6 +120,15 @@ public class Options
 
     public Options option (char    flag,
                            String  name,
+                           String  description,
+                           boolean value_required)
+    {
+        return option (String.valueOf(flag), name, description,
+                       value_required, null);
+    }
+
+    public Options option (char    flag,
+                           String  name,
                            String  description)
     {
         return option (flag, name, description, false, null);

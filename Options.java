@@ -173,7 +173,7 @@ public class Options
      *
      * @throws InvalidOptionException
      */
-    public void check ()
+    private void check ()
     {
         for (Option option : options_list)
             if (option.value_required && option.value() == null)
@@ -327,7 +327,7 @@ public class Options
                 // This is an argument and no option.
                 argument_list.add(arguments[a]);
         }
+        check();
         return argument_list.toArray(new String[0]);
     }
-
 }

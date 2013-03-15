@@ -47,7 +47,12 @@ class example
             options.print_usage(System.out);
         else
         {
-            args = options.parse(args);
+            try { args = options.parse(args); }
+            catch (InvalidOptionException e)
+            {
+                System.err.println (e.getMessage());
+                System.exit (1);
+            }
 
             if (options.isset("help"))
                 options.print_usage(System.out);
@@ -64,7 +69,10 @@ class example
                 else if (options.isset('d'))
                     System.out.println (calc.d());
                 else
-                    throw new RuntimeException ("Invalid option given");
+                {
+                    System.err.println ("Invalid option given");
+                    System.exit (1);
+                }
             }
         }
     }

@@ -18,6 +18,7 @@
  */
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,117 +28,70 @@ public class Options
 {
     private class Option
     {
-        final String  flag;
-        final String  name;
-        final String  description;
-        final boolean value_required;
-        final String  default_value;
+        final Character flag;
+        final String    name;
+        final String    description;
+        final String[]  default_values;
 
-        boolean isset = false;
-        String  value = null;
+        boolean  isset  = false;
+        String[] values = null;
 
         /**
          * @throws InvalidOptionException
          */
-        Option (String  flag,
-                String  name,
-                String  description,
-                boolean value_required,
-                String  default_value)
+        Option (Character flag,
+                String    name,
+                String    description,
+                String[]  default_values)
         {
-            if (flag == null)
-            {
-                if (name == null)
-                    throw new InvalidOptionException
-                        ("Missing option identifier");
-            }
-            else
-                if (flag.length() != 1)
-                    throw new InvalidOptionException
-                        ("Option flag length does not equal 1");
+            if (flag == null && name == null)
+                throw new InvalidOptionException
+                    ("Missing option identifier");
             if (description == null)
                 throw new InvalidOptionException
                     ("Missing option description");
             this.flag           = flag;
             this.name           = name;
             this.description    = description;
-            this.value_required = value_required;
-            this.default_value  = default_value;
+            this.default_values = default_values;
         }
         
-        /**
-         * @throws InvalidOptionException
-         */
-        Option (char    flag,
-                String  name,
-                String  description,
-                boolean value_required,
-                String  default_value)
+        private String value (int i)
         {
-            this (String.valueOf(flag), name, description, 
-                  value_required, default_value);
-        }
-
-        private String value ()
-        {
-            if (value == null)
-                return default_value;
+            if (values[i] == null)
+                return default_values[i];
             else
-                return value;
+                return values[i];
         }
     }
 
     private List<Option>options_list = new LinkedList<Option>();
     private Map<String,Option>options_hash = new HashMap<String,Option>();
-    private boolean usage_enabled = true;
-    private String[] usage_header = null;
+    private String[] about_text = null;
+    private String[] usage_text = null;
 
-    public Options option (String  flag,
-                           String  name,
-                           String  description,
-                           boolean value_required,
-                           String  default_value)
+    public Options option (Character flag,
+                           String    name,
+                           String    description,
+                           String... default_values)
     {
-        Option option = new Option (flag, name, description, 
-                                    value_required, default_value);
+        Option option = new Option (flag, name, description, default_values);
         if (flag != null)
-            options_hash.put (flag, option);
+            options_hash.put (flag.toString(), option);
         if (name != null)
             options_hash.put (name, option);
         options_list.add (option);
         return this;
     }
 
-    public Options option (char    flag,
-                           String  name,
-                           String  description,
-                           boolean value_required,
-                           String  default_value)
+    public Options option (Character flag,
+                           String    name,
+                           String    description,
+                           int       values)
     {
-        return option (String.valueOf(flag), name, description,
-                       value_required, default_value);
-    }
-
-    public Options option (char    flag,
-                           String  name,
-                           String  description,
-                           boolean value_required)
-    {
-        return option (String.valueOf(flag), name, description,
-                       value_required, null);
-    }
-
-    public Options option (char    flag,
-                           String  name,
-                           String  description)
-    {
-        return option (flag, name, description, false, null);
-    }
-
-    public Options option (String  name,
-                           String  description)
-    {
-        return option (null, name, description, false, null);
+        String[] default_values = new String[values];
+        Arrays.fill(default_values, null);
+        return option (flag, name, description, default_values);
     }
 
     /**
@@ -152,24 +106,29 @@ public class Options
         return option;
     }
 
-    private Option get_option (char flag)
+    public String get (char flag, int i)
     {
-        return get_option (String.valueOf(flag));
+        return get_option(String.valueOf(flag)).value(i);
     }
 
     public String get (char flag)
     {
-        return get_option(flag).value();
+        return get_option(String.valueOf(flag)).value(0);
+    }
+
+    public String get (String name, int i)
+    {
+        return get_option(name).value(i);
     }
 
     public String get (String name)
     {
-        return get_option(name).value();
+        return get_option(name).value(0);
     }
 
     public boolean isset (char flag)
     {
-        return get_option(flag).isset;
+        return get_option(String.valueOf(flag)).isset;
     }
 
     public boolean isset (String name)
@@ -185,10 +144,12 @@ public class Options
     private void check ()
     {
         for (Option option : options_list)
-            if (option.value_required && option.value() == null)
-                throw new InvalidOptionException
-                    ("Required option missing: " + 
-                     option.flag == null ? option.name : option.flag);
+            if (option.default_values != null)
+                if (option.values == null ||
+                    option.values.length != option.default_values.length)
+                    throw new InvalidOptionException
+                        ("Required option missing: " + option.flag == null ?
+                         option.name : option.flag.toString());
     }
 
     private void print_usage ()
@@ -198,18 +159,39 @@ public class Options
 
     public void print_usage (PrintStream out)
     {
-        if (usage_header != null)
-            for (String line : usage_header)
+        if (about_text != null)
+            for (String line : about_text)
                 out.println(line);
+        if (usage_text != null)
+            if (usage_text.length == 1)
+            {
+                out.print("Usage: ");
+                out.println(usage_text[0]);
+            }
+            else
+            {
+                out.println("Usage:");
+                for (String line : usage_text)
+                {
+                    out.print("  ");
+                    out.println(line);
+                }
+            }
         out.println("Options:");
         int max_name = 0;
+        int max_vals = 0;
         for (Option option : options_list)
             if (option.name != null)
+            {
                 if (option.name.length() > max_name)
                     max_name = option.name.length();
+                if (option.default_values != null &&
+                    option.default_values.length > max_vals)
+                    max_vals = option.default_values.length;
+            }
         for (Option option : options_list)
         {
-            out.print(' ');
+            out.print("  ");
             if (option.flag != null)
             {
                 out.print('-');
@@ -234,37 +216,30 @@ public class Options
                 for (int i = 0; i < max_name; i++)
                     out.print(' ');
             }
-            out.print(' ');
-            if (option.value_required)
-                out.print("VALUE");
-            else
-                out.print("     ");
+            for (int i = 0; i < max_vals; i++)
+                if (option.default_values[i] != null)
+                {
+                    out.println (' ');
+                    out.println ((char)((int)'A' + i));
+                }
+                else
+                    out.println ("  ");
             out.print("   ");
             out.print(option.description);
             out.println();
         }
     }
 
-    public Options usage (String... header)
+    public Options about (String... text)
     {
-        usage_enabled = true;
-        usage_header = header;
+        about_text = text;
         return this;
     }
 
-    public Options help (char flag, String description)
+    public Options usage (String... text)
     {
-        return option (flag, null, description, false, null);
-    }
-
-    public Options help (String name, String description)
-    {
-        return option (null, name, description, false, null);
-    }
-
-    public Options help (char flag, String name, String description)
-    {
-        return option (flag, name, description, false, null);
+        usage_text = text;
+        return this;
     }
 
     /**

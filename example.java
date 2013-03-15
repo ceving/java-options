@@ -19,29 +19,45 @@
 
 class example
 {
-    int x, y;
+    void die () { System.exit (1); }
+    void die (String... message)
+    {
+        for (String msg : message) System.err.println (msg);
+        die();
+    }
+
+    Integer x = null;
+    Integer y = null;
 
     example (String[] args)
     {
-        x = Integer.parseInt(args[0]);
-        y = Integer.parseInt(args[1]);
+        if (args.length > 0)
+            x = new Integer(args[0]);
+        else
+            die ("Argument missing");
+        if (args.length > 1)
+            y = new Integer(args[1]);
     }
 
     int a () { return x + y; }
     int s () { return x - y; }
     int m () { return x * y; }
     int d () { return x / y; }
+    int q () { return x * x; }
 
     public static void main (String[] args)
     {
         Options options = new Options()
-            .usage  ("Calc version 1.0",
-                     "Usage: calc <option> x y")
-            .option ("help", "Display usage.")
+            .about  ("Calc version 1.0")
+            .usage  ("calc <option> x [y]")
+            .option (null, "help", "Display usage.")
             .option ('a', "add", "Addition")
             .option ('s', "subtract", "Subtraction")
             .option ('m', "multiply", "Multiplication")
-            .option ('d', "divide", "Division");
+            .option ('d', "divide", "Division")
+            .option ('q', "square", "Square A", (String)null)
+            ;
+        
 
         if (args.length == 0)
             options.print_usage(System.out);
@@ -68,6 +84,7 @@ class example
                     System.out.println (calc.m());
                 else if (options.isset('d'))
                     System.out.println (calc.d());
+                
                 else
                 {
                     System.err.println ("Invalid option given");

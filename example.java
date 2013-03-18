@@ -17,79 +17,78 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import szi.options;
+
 class example
 {
-    void die () { System.exit (1); }
-    void die (String... message)
+    static void die () { System.exit (1); }
+
+    static void die (String... message)
     {
         for (String msg : message) System.err.println (msg);
         die();
     }
-
-    Integer x = null;
-    Integer y = null;
-
-    example (String[] args)
+    static void die (Throwable e)
     {
-        if (args.length > 0)
-            x = new Integer(args[0]);
-        else
-            die ("Argument missing");
-        if (args.length > 1)
-            y = new Integer(args[1]);
+        e.printStackTrace(System.err);
+        die();
     }
 
-    int a () { return x + y; }
-    int s () { return x - y; }
-    int m () { return x * y; }
-    int d () { return x / y; }
-    int q () { return x * x; }
+    int a (String x, String y) { return new Integer(x) + new Integer(y); }
+    int s (String x, String y) { return new Integer(x) + new Integer(y); }
+    int m (String x, String y) { return new Integer(x) + new Integer(y); }
+    int d (String x, String y) { return new Integer(x) + new Integer(y); }
+    int q (String x) { Integer i = new Integer (x); return i * i; }
 
     public static void main (String[] args)
     {
         Options options = new Options()
             .about  ("Calc version 1.0")
             .usage  ("calc <option> x [y]")
-            .option (null, "help", "Display usage.")
-            .option ('a', "add", "Addition")
-            .option ('s', "subtract", "Subtraction")
-            .option ('m', "multiply", "Multiplication")
-            .option ('d', "divide", "Division")
-            .option ('q', "square", "Square A", (String)null)
+            .option ("help", "Display usage.")
+            .option ('a', "add", "Addition", 2)
+            .option ('s', "subtract", "Subtraction", 2)
+            .option ('m', "multiply", "Multiplication", 2)
+            .option ('d', "divide", "Division", 2)
+            .option ('q', "square", "Square A", 1)
             ;
         
-
         if (args.length == 0)
             options.print_usage(System.out);
         else
         {
-            try { args = options.parse(args); }
+            try { options.parse(args); }
             catch (InvalidOptionException e)
             {
-                System.err.println (e.getMessage());
-                System.exit (1);
+                die (e.getMessage());
             }
 
             if (options.isset("help"))
-                options.print_usage(System.out);
+                options.print_usage();
             else
             {
-                example calc = new example (args);
-
-                if (options.isset('a'))
-                    System.out.println (calc.a());
-                else if (options.isset('s'))
-                    System.out.println (calc.s());
-                else if (options.isset('m'))
-                    System.out.println (calc.m());
-                else if (options.isset('d'))
-                    System.out.println (calc.d());
+                example calc = new example ();
                 
+                int result;
+                if (options.isset('a'))
+                    result = calc.a(options.get('a', 0),
+                                    options.get('a', 1));
+                else if (options.isset('s'))
+                    result = calc.s(options.get('s', 0),
+                                    options.get('s', 1));
+                else if (options.isset('m'))
+                    result = calc.m(options.get('m', 0),
+                                    options.get('m', 1));
+                else if (options.isset('d'))
+                    result = calc.d(options.get('d', 0),
+                                    options.get('d', 1));
+                else if (options.isset('q'))
+                    result = calc.q(options.get('q', 0));
                 else
                 {
-                    System.err.println ("Invalid option given");
-                    System.exit (1);
+                    die ("Invalid option given");
                 }
+                System.out.println (result);
             }
         }
     }

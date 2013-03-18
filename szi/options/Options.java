@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package szi.options;
+
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,56 +28,39 @@ import java.util.Map;
 
 public class Options
 {
-    private class Option
-    {
-        final Character flag;
-        final String    name;
-        final String    description;
-        final String[]  default_values;
-
-        boolean  isset  = false;
-        String[] values = null;
-
-        /**
-         * @throws InvalidOptionException
-         */
-        Option (Character flag,
-                String    name,
-                String    description,
-                String[]  default_values)
-        {
-            if (flag == null && name == null)
-                throw new InvalidOptionException
-                    ("Missing option identifier");
-            if (description == null)
-                throw new InvalidOptionException
-                    ("Missing option description");
-            this.flag           = flag;
-            this.name           = name;
-            this.description    = description;
-            this.default_values = default_values;
-        }
-        
-        private String value (int i)
-        {
-            if (values[i] == null)
-                return default_values[i];
-            else
-                return values[i];
-        }
-    }
-
     private List<Option>options_list = new LinkedList<Option>();
     private Map<String,Option>options_hash = new HashMap<String,Option>();
     private String[] about_text = null;
     private String[] usage_text = null;
 
+    /**
+     * Defines an option by adding it to the list of options and
+     * returning the options.  Short options are identified by a flag
+     * character and long options are identified by a naming
+     * string. Options can have both a flag and a name but it is an
+     * error, if both are undefined. The description for the usage
+     * help is required.  An option can require one or more arguments
+     * and each argument may have a default value.
+     *
+     * @param flag            the character for a short option
+     * @param name            the long name of the option
+     * @param description     a short description for the help text
+     * @param required_values the number of required option values
+     * @param default_values  the default values if the option is not
+     *                        specified
+     *
+     * @return the option object
+     *
+     * @throws InvalidOptionException if flag and name are both null
+     */
     public Options option (Character flag,
                            String    name,
                            String    description,
+                           int       required_values,
                            String... default_values)
     {
-        Option option = new Option (flag, name, description, default_values);
+        Option option = new Option (flag, name, description,
+                                    required_values, default_values);
         if (flag != null)
             options_hash.put (flag.toString(), option);
         if (name != null)
@@ -83,54 +68,138 @@ public class Options
         options_list.add (option);
         return this;
     }
-
-    public Options option (Character flag,
-                           String    name,
+    
+    /** @see #option(Character, String, String, int, String...) */
+    public Options option (char      flag,
                            String    description,
-                           int       values)
+                           int       required_values,
+                           String... default_values)
     {
-        String[] default_values = new String[values];
-        Arrays.fill(default_values, null);
-        return option (flag, name, description, default_values);
+        return option (flag, null, description,
+                       required_values, default_values);
+    }
+
+    /** @see #option(Character, String, String, int, String...) */
+    public Options option (char      flag,
+                           String    description)
+    {
+        return option (flag, null, description, 0);
+    }
+
+    /** @see #option(Character, String, String, int, String...) */
+    public Options option (char      flag,
+                           String    name,
+                           String    description)
+    {
+        return option (flag, name, description, 0);
+    }
+
+    /** @see #option(Character, String, String, int, String...) */
+    public Options option (String    name,
+                           String    description,
+                           int       required_values,
+                           String... default_values)
+    {
+        return option (null, name, description,
+                       required_values, default_values);
+    }
+
+    /** @see #option(Character, String, String, int, String...) */
+    public Options option (String    name,
+                           String    description)
+    {
+        return option ((Character)null, name, description, 0);
     }
 
     /**
      * @throws InvalidOptionException
      */
-    private Option get_option (String id)
+    private Option get_option (char flag)
     {
-        Option option = options_hash.get(id);
+        Option option = options_hash.get(String.valueOf(flag));
         if (option == null)
             throw new InvalidOptionException
-                ("Undefined option: " + id);
+                ("Undefined short option: -" + flag);
         return option;
     }
 
-    public String get (char flag, int i)
+    /**
+     * @throws InvalidOptionException
+     */
+    private Option get_option (String name)
     {
-        return get_option(String.valueOf(flag)).value(i);
+        Option option = options_hash.get(name);
+        if (option == null)
+            throw new InvalidOptionException
+                ("Undefined long option: --" + name);
+        return option;
     }
 
+    /**
+     * Returns the nth value of a short option.
+     *
+     * @param flag  the character of a short option
+     * @param index the intex to the value
+     *
+     * @return the value for the specified option
+     */
+    public String get (char flag, int index)
+    {
+        return get_option(flag).value(index);
+    }
+
+    /**
+     * Returns the first value of an option.
+     *
+     * @see #get(char, int)
+     */
     public String get (char flag)
     {
-        return get_option(String.valueOf(flag)).value(0);
+        return get_option(flag).value(0);
     }
 
-    public String get (String name, int i)
+    /**
+     * Returns the nth value of a long option.
+     *
+     * @param name  the name of a long option
+     * @param index the intex to the value
+     *
+     * @return the value for the specified option
+     */
+    public String get (String name, int index)
     {
-        return get_option(name).value(i);
+        return get_option(name).value(index);
     }
 
+    /**
+     * Returns the first value of a long option.
+     *
+     * @see #get(String, int)
+     */
     public String get (String name)
     {
         return get_option(name).value(0);
     }
 
+    /**
+     * Checks if a short option is set.
+     *
+     * @param flag the character of a short option
+     *
+     * @return true if the option is set
+     */
     public boolean isset (char flag)
     {
-        return get_option(String.valueOf(flag)).isset;
+        return get_option(flag).isset;
     }
 
+    /**
+     * Checks if a long option is set.
+     *
+     * @param name  the name of a long option
+     *
+     * @return true if the option is set
+     */
     public boolean isset (String name)
     {
         return get_option(name).isset;
@@ -144,19 +213,28 @@ public class Options
     private void check ()
     {
         for (Option option : options_list)
-            if (option.default_values != null)
-                if (option.values == null ||
-                    option.values.length != option.default_values.length)
-                    throw new InvalidOptionException
-                        ("Required option missing: " + option.flag == null ?
-                         option.name : option.flag.toString());
+            if (option.isset && option.required_values > 0)
+                for (int v = 0; v < option.required_values; v++)
+                    if (option.values[v] == null)
+                        throw new InvalidOptionException
+                            ("Option value " + v + " missing for option: " +
+                             option.flag != null ? option.flag.toString() :
+                             option.name);
     }
 
-    private void print_usage ()
+    /**
+     * Print the usage text to stdout.
+     */
+    public void print_usage ()
     {
         print_usage(System.out);
     }
 
+    /**
+     * Print the usage text to the specified print stream.
+     *
+     * @param out the output print stream
+     */
     public void print_usage (PrintStream out)
     {
         if (about_text != null)
@@ -230,12 +308,22 @@ public class Options
         }
     }
 
+    /**
+     * Define the about header
+     *
+     * @param text the text for the about header
+     */
     public Options about (String... text)
     {
         about_text = text;
         return this;
     }
 
+    /**
+     * Define the about header
+     *
+     * @param text the text for the usage header
+     */
     public Options usage (String... text)
     {
         usage_text = text;
@@ -244,7 +332,26 @@ public class Options
 
     /**
      * Parse the arguments list by extracting the options and
-     * returning the remaining arguments.
+     * returning the remaining arguments. Options are either short or
+     * long options. A short option starts with a hyphen followed by a
+     * character and zero or more optional argument. The following
+     * list shows examples for valid short options.
+     * <p>
+     * <ul><li>-n</li><li>-o1</li><li>-o 1</li><li>-t 1 2</li></ul>
+     * <p>
+     * Long options are starting which two two hyphens followed by a
+     * string and further optional arguments. The following list shows
+     * examples for valid long options.
+     * <p>
+     * <ul><li>--help</li><li>--add 1 2</li><li>--debug hi</li></ul>
+     * <p>
+     * Two hyphens without any name terminate the option list.  All
+     * options following the termination are returned as remaining
+     * arguments.
+     *
+     * @param arguments the list of command line arguments
+     *
+     * @return the list of non option arguments
      *
      * @throws InvalidOptionException
      */
@@ -267,14 +374,15 @@ public class Options
                         // This is a long option.
                         Option option = get_option (argument.substring (2));
                         option.isset = true;
-                        if (option.value_required)
+                        for (int v = 0; v < option.required_values; v++)
                         {
                             a++;
                             if (a < arguments.length)
-                                option.value = arguments[a];
+                                option.values[v] = arguments[a];
                             else
                                 throw new InvalidOptionException
-                                    ("Option argument missing");
+                                    ("argument missing for option: "
+                                     + option.id());
                         }
                     }
                 else
@@ -282,26 +390,28 @@ public class Options
                     // This is a short option.
                     for (int i = 1; i < argument.length(); i++)
                     {
-                        String flag = String.valueOf(argument.charAt(i));
-                        Option option = get_option(flag);
+                        Option option = get_option(argument.charAt(i));
                         option.isset = true;
-                        if (option.value_required)
+                        if (option.required_values > 0)
                         {
-                            String rest = argument.substring(i);
+                            int v = 0;
+                            String rest = argument.substring(++i);
                             if (rest.length() > 0)
                                 // If pressent the remaining part of
                                 // the argument is the value.
-                                option.value = argument.substring(i);
-                            else
+                                option.values[v++] = rest;
+
+                            for (; v < option.required_values; v++)
                             {
                                 // Otherwise the next argument is the
                                 // value.
                                 a++;
                                 if (a < arguments.length)
-                                    option.value = arguments[a];
+                                    option.values[v] = arguments[a];
                                 else
                                     throw new InvalidOptionException
-                                        ("Option argument missing");
+                                        ("Argument missing for option: "
+                                         + option.id());
                             }
                             break;
                         }
@@ -313,5 +423,10 @@ public class Options
         }
         check();
         return argument_list.toArray(new String[0]);
+    }
+
+    public String toString()
+    {
+        return Arrays.toString((Object[])(options_list.toArray()));
     }
 }

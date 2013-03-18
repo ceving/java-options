@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package szi.options;
+
 public class InvalidOptionException extends RuntimeException
 {
     public InvalidOptionException (String s)

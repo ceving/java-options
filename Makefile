@@ -31,7 +31,10 @@ example.sh: example.sh.in VERSION
 run:
 	@echo "Example: java -cp .:$(BINJAR) example"
 
+tag:
+	git -a v$(VERSION) -m "Version $(VERSION)"
+
 $(BINJAR): build
 $(DOCJAR): doc
 
-.PHONY: all build doc clean example run
+.PHONY: all build doc clean example run tag

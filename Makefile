@@ -32,7 +32,7 @@ run:
 	@echo "Example: java -cp .:$(BINJAR) example"
 
 tag:
-	git -a v$(VERSION) -m "Version $(VERSION)"
+	git tag -a v$(VERSION) -m "Version $(VERSION)"
 
 $(BINJAR): build
 $(DOCJAR): doc

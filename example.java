@@ -17,7 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import szi.options;
+import szi.options.Options;
+import szi.options.InvalidOptionException;
 
 class example
 {
@@ -69,7 +70,7 @@ class example
             {
                 example calc = new example ();
                 
-                int result;
+                int result = 0;
                 if (options.isset('a'))
                     result = calc.a(options.get('a', 0),
                                     options.get('a', 1));

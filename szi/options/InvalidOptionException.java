@@ -21,6 +21,8 @@ package szi.options;
 
 public class InvalidOptionException extends RuntimeException
 {
+    private static final long serialVersionUID = 0x47b52ba005c28598L;
+
     public InvalidOptionException (String s)
     {
         super (s);

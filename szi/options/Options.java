@@ -427,6 +427,6 @@ public class Options
 
     public String toString()
     {
-        return Arrays.toString((Object[])(options_list.toArray()));
+        return Arrays.toString(options_list.toArray());
     }
 }

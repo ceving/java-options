@@ -2,12 +2,14 @@ SOURCE := szi/options/Options.java
 BINJAR := szi-options.jar
 DOCJAR := szi-options-javadoc.jar
 
+JAVAC := javac -Xlint -g
+
 all: $(BINJAR)
 
 build: $(SOURCE)
 	rm -rf $@
 	mkdir $@
-	javac -d $@ $^
+	$(JAVAC) -d $@ $^
 	jar cf $(BINJAR) -C $@ .
 
 doc: $(SOURCE)
@@ -20,9 +22,12 @@ clean:
 	rm -rf *.class build doc *.jar
 
 example:
-	javac -cp .:$(BINJAR) example.java
+	$(JAVAC) -cp $(BINJAR) example.java
+
+run:
+	@echo "Example: java -cp .:$(BINJAR) example"
 
 $(BINJAR): build
 $(DOCJAR): doc
 
-.PHONY: all build doc clean example
+.PHONY: all build doc clean example run

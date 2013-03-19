@@ -45,13 +45,13 @@ class example
     {
         Options options = new Options()
             .about  ("Calc version 1.0")
-            .usage  ("calc <option> x [y]")
+            .usage  ("calc OPTION A [B]")
             .option ("help", "Display usage.")
-            .option ('a', "add", "Addition", 2)
-            .option ('s', "subtract", "Subtraction", 2)
-            .option ('m', "multiply", "Multiplication", 2)
-            .option ('d', "divide", "Division", 2)
-            .option ('q', "square", "Square A", 1)
+            .option ('a', "add", "Addition: A + B", 2)
+            .option ('s', "subtract", "Subtraction: A - B", 2)
+            .option ('m', "multiply", "Multiplication: A * B", 2)
+            .option ('d', "divide", "Division: A / B", 2)
+            .option ('q', "square", "Square: A^2", 1)
             ;
         
         if (args.length == 0)

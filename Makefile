@@ -1,6 +1,7 @@
+VERSION := $(shell cat VERSION)
 SOURCE := szi/options/Options.java
-BINJAR := szi-options.jar
-DOCJAR := szi-options-javadoc.jar
+BINJAR := szi-options-$(VERSION).jar
+DOCJAR := szi-options-$(VERSION)-javadoc.jar
 
 JAVAC := javac -Xlint -g
 
@@ -21,8 +22,11 @@ doc: $(SOURCE)
 clean:
 	rm -rf *.class build doc *.jar
 
-example:
+example: example.sh
 	$(JAVAC) -cp $(BINJAR) example.java
+
+example.sh: example.sh.in VERSION
+	sed "s/VERSION/$(VERSION)/" < $< > $@
 
 run:
 	@echo "Example: java -cp .:$(BINJAR) example"

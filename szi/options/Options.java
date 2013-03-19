@@ -237,6 +237,7 @@ public class Options
      */
     public void print_usage (PrintStream out)
     {
+        // Display header
         if (about_text != null)
             for (String line : about_text)
                 out.println(line);
@@ -255,6 +256,7 @@ public class Options
                     out.println(line);
                 }
             }
+        // Display options
         out.println("Options:");
         int max_name = 0;
         int max_vals = 0;
@@ -264,12 +266,13 @@ public class Options
                 if (option.name.length() > max_name)
                     max_name = option.name.length();
                 if (option.default_values != null &&
-                    option.default_values.length > max_vals)
-                    max_vals = option.default_values.length;
+                    option.required_values > max_vals)
+                    max_vals = option.required_values;
             }
         for (Option option : options_list)
         {
             out.print("  ");
+            // Display short option
             if (option.flag != null)
             {
                 out.print('-');
@@ -281,6 +284,7 @@ public class Options
                 out.print(',');
             else
                 out.print(' ');
+            // Display long option
             if (option.name != null)
             {
                 out.print(" --");
@@ -294,15 +298,19 @@ public class Options
                 for (int i = 0; i < max_name; i++)
                     out.print(' ');
             }
-            for (int i = 0; i < max_vals; i++)
-                if (option.default_values[i] != null)
-                {
-                    out.println (' ');
-                    out.println ((char)((int)'A' + i));
-                }
+            for (int i = 0; i < Math.min(8, max_vals); i++)
+                if (option.required_values > 8 && i > 6)
+                    out.print ("..");
                 else
-                    out.println ("  ");
-            out.print("   ");
+                    if (i < option.required_values)
+                    {
+                        out.print (' ');
+                        out.print ((char)((int)'A' + i));
+                    }
+                    else
+                        out.print ("  ");
+            out.print("  ");
+            // Display description
             out.print(option.description);
             out.println();
         }

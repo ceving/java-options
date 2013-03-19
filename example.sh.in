@@ -1,0 +1,2 @@
+#! /bin/sh
+exec java -cp .:szi-options-VERSION.jar example "$@"

@@ -84,7 +84,7 @@ class example
                     result = calc.d(options.get('d', 0),
                                     options.get('d', 1));
                 else if (options.isset('q'))
-                    result = calc.q(options.get('q', 0));
+                    result = calc.q(options.get('q'));
                 else
                 {
                     die ("Invalid option given");

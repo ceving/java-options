@@ -47,6 +47,11 @@ class Option
         if (description == null)
             throw new InvalidOptionException
                 ("Missing option description");
+        if (default_values.length > 0 &&
+            default_values.length != required_values)
+            throw new InvalidOptionException
+                ("Number of default values does not match number of "
+                 + "required values.");
         this.flag            = flag;
         this.name            = name;
         this.description     = description;
@@ -79,6 +84,11 @@ class Option
                 return default_values[i];
             else
                 return null;
+    }
+
+    boolean has_default ()
+    {
+        return default_values.length > 0;
     }
 
     public String toString()

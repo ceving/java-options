@@ -34,6 +34,9 @@ run:
 tag:
 	git tag -a v$(VERSION) -m "Version $(VERSION)"
 
+lines:
+	find $$(dirname $(SOURCE)) -name \*.java | xargs cat | grep -cv '^\s*$$'
+
 $(BINJAR): build
 $(DOCJAR): doc
 

@@ -40,6 +40,12 @@ class example
     int m (String x, String y) { return new Integer(x) + new Integer(y); }
     int d (String x, String y) { return new Integer(x) + new Integer(y); }
     int q (String x) { Integer i = new Integer (x); return i * i; }
+    
+    static <T> void println (T... args)
+    {
+        for (T arg : args)
+            System.out.println (arg);
+    }
 
     public static void main (String[] args)
     {
@@ -52,6 +58,10 @@ class example
             .option ('m', "multiply", "Multiplication: A * B", 2)
             .option ('d', "divide", "Division: A / B", 2)
             .option ('q', "square", "Square: A^2", 1)
+            .option ("eight", "8 arguments.", 8)
+            .option ("nine", "9 arguments.", 9)
+            .option ("ordinals", "Three ordinals.",
+                     "1st", "2nd", "3rd")
             ;
         
         if (args.length == 0)
@@ -70,26 +80,30 @@ class example
             {
                 example calc = new example ();
                 
-                int result = 0;
                 if (options.isset('a'))
-                    result = calc.a(options.get('a', 0),
-                                    options.get('a', 1));
+                    println (calc.a(options.get('a', 0),
+                                    options.get('a', 1)));
                 else if (options.isset('s'))
-                    result = calc.s(options.get('s', 0),
-                                    options.get('s', 1));
+                    println (calc.s(options.get('s', 0),
+                                    options.get('s', 1)));
                 else if (options.isset('m'))
-                    result = calc.m(options.get('m', 0),
-                                    options.get('m', 1));
+                    println (calc.m(options.get('m', 0),
+                                    options.get('m', 1)));
                 else if (options.isset('d'))
-                    result = calc.d(options.get('d', 0),
-                                    options.get('d', 1));
+                    println (calc.d(options.get('d', 0),
+                                    options.get('d', 1)));
                 else if (options.isset('q'))
-                    result = calc.q(options.get('q'));
+                    println (calc.q(options.get('q')));
+                else if (options.isset("eight"))
+                    println ("eight");
+                else if (options.isset("nine"))
+                    println ("nine");
+                else if (options.isset("ordinals"))
+                    println (options.get ("ordinals", 0),
+                             options.get ("ordinals", 1),
+                             options.get ("ordinals", 2));
                 else
-                {
                     die ("Invalid option given");
-                }
-                System.out.println (result);
             }
         }
     }

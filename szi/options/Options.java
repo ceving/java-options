@@ -72,11 +72,18 @@ public class Options
     /** @see #option(Character, String, String, int, String...) */
     public Options option (char      flag,
                            String    description,
-                           int       required_values,
+                           int       required_values)
+    {
+        return option (flag, null, description, required_values);
+    }
+
+    /** @see #option(Character, String, String, int, String...) */
+    public Options option (char      flag,
+                           String    description,
                            String... default_values)
     {
         return option (flag, null, description,
-                       required_values, default_values);
+                       default_values.length, default_values);
     }
 
     /** @see #option(Character, String, String, int, String...) */
@@ -97,11 +104,18 @@ public class Options
     /** @see #option(Character, String, String, int, String...) */
     public Options option (String    name,
                            String    description,
-                           int       required_values,
+                           int       required_values)
+    {
+        return option (null, name, description, required_values);
+    }
+
+    /** @see #option(Character, String, String, int, String...) */
+    public Options option (String    name,
+                           String    description,
                            String... default_values)
     {
         return option (null, name, description,
-                       required_values, default_values);
+                       default_values.length, default_values);
     }
 
     /** @see #option(Character, String, String, int, String...) */
@@ -213,7 +227,9 @@ public class Options
     private void check ()
     {
         for (Option option : options_list)
-            if (option.isset && option.required_values > 0)
+            if (option.isset &&
+                option.required_values > 0 &&
+                !option.has_default())
                 for (int v = 0; v < option.required_values; v++)
                     if (option.values[v] == null)
                         throw new InvalidOptionException
@@ -310,8 +326,20 @@ public class Options
                     else
                         out.print ("  ");
             out.print("  ");
-            // Display description
+            // Display description.
             out.print(option.description);
+            // Display default values.
+            if (option.default_values != null && 
+                option.default_values.length > 0)
+            {
+                out.print (" (default:");
+                for (String value : option.default_values)
+                {
+                    out.print (' ');
+                    out.print (value);
+                }
+                out.print (")");
+            }
             out.println();
         }
     }
@@ -382,16 +410,36 @@ public class Options
                         // This is a long option.
                         Option option = get_option (argument.substring (2));
                         option.isset = true;
-                        for (int v = 0; v < option.required_values; v++)
+                        // Peek next argument.
                         {
-                            a++;
-                            if (a < arguments.length)
+                            int a1 = a + 1; // look ahead
+                            if (a1 < arguments.length && 
+                                arguments[a1].length() > 0 &&
+                                arguments[a1].charAt(0) == '-')
+                                // The next argument is an option and no
+                                // argument.
+                                if (option.has_default())
+                                    // This is ok if we have default values.
+                                    continue;
+                                else
+                                    throw new InvalidOptionException
+                                        ("Argument missing for option: "
+                                         + option.id());
+                            else
+                                if (a1 >= arguments.length &&
+                                    option.has_default())
+                                    // There are no further arguments
+                                    // but we have a default value.
+                                    continue;
+                        }
+                        // The next arguments must be values.
+                        for (int v = 0; v < option.required_values; v++)
+                            if (++a < arguments.length)
                                 option.values[v] = arguments[a];
                             else
                                 throw new InvalidOptionException
-                                    ("argument missing for option: "
+                                    ("Argument missing for option: "
                                      + option.id());
-                        }
                     }
                 else
                 {
